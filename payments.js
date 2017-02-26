@@ -437,7 +437,7 @@
   <div class="paymentInfo">
   </div>
 
-  <form class="simple_form cardInfo"  id="payment-form">
+  <form class="simple_form cardInfo"  id="payment-form" action="" method="post">
 
     <fieldset class="cardInfo__cardDetails">
 
@@ -480,13 +480,13 @@
 
     
 
-        function initialise(idOfContainer, apiCredentials, requestCallback) {
+        function initialise(idOfContainer, sessionKey, requestCallback) {
             this.containerId = idOfContainer;
-            this.apiCredentials = apiCredentials;
+            this.sessionKey = sessionKey;
             this.requestCallback = requestCallback;
 
             document.getElementById("payment-container").innerHTML = paymentHTML;
-            // document.getElementsByClassName('cc-num')[0].payment('formatCardNumber');
+            var creditCardInput = document.getElementById('cc-num');
             // $('.cc-exp').payment('formatCardExpiry');
             // $('.cc-cvc').payment('formatCardCVC');
             var form =  document.getElementById('payment-form');    
@@ -498,11 +498,16 @@
                 submit();
             }, false);
 
+            creditCardInput.oninput =  function(event) //TODO Fallback to non html 5 listeners
+            {
+                creditCardInput.value = Validator.formatCardNumber(creditCardInput.value);
+            };
+
 
             var submit = function (e) {
                 if (true) { //Is valid check here
                     alert('test');
-                   
+                    //api call which also calls requestCallback
                 }
 
             };
