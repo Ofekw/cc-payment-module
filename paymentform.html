@@ -2,7 +2,7 @@
 <html lang='en'>
 
 <head>
-    <title>Payfields Demo</title>
+    <title>PayForm Demo</title>
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <script src='payments.js'></script>
@@ -14,13 +14,13 @@
 <body>
 
     <div class='container' id='payment-container'>
-        <span>Test</span>
+        <span>THIS SHOULD NOT SHOW</span>
     </div>
 
 
 </body>
     <script>
-      window.PaymentModule.initialise();
+      window.PaymentModule.initialise('payment-container');
     </script>
 
 </html>

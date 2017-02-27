@@ -427,7 +427,7 @@
 (function (window) {
     'use strict';
     var PaymentModule = (function () {
-        //Build up dom
+
         var containerId,
             apiCredentials,
             requestCallback;
@@ -437,11 +437,11 @@
   <div class="paymentInfo">
   </div>
 
-  <form class="simple_form cardInfo"  id="payment-form" action="" method="post">
+  <form class="cardInfo"  id="cc-payment-form" action="" method="post">
 
-    <fieldset class="cardInfo__cardDetails">
+    <fieldset class="cardInfo-cardDetails">
 
-      <div class="form-row cardInfo__cc-num">
+      <div class="form-row cardInfo-cc-num">
         <label for="cc-num">
           <abbr title="required">*</abbr>
           <span>Card Number</span>
@@ -449,7 +449,7 @@
         <input id="cc-num" type="tel" class="paymentInput cc-num" placeholder="•••• •••• •••• ••••" autocompletetype="cc-number" required="required">
       </div>
 
-      <div class="form-row cardInfo__cc-exp">
+      <div class="form-row cardInfo-cc-exp">
         <label for="cc-exp">
           <abbr title="required">*</abbr>
           <span>Expires</span>
@@ -457,7 +457,7 @@
         <input id="cc-exp" type="tel" class="paymentInput cc-exp cc-exp__demo" placeholder="MM / YYYY" autocompletetype="cc-exp" required="required">
       </div>
 
-      <div class="form-row cardInfo__cc-cvc">
+      <div class="form-row cardInfo-cc-cvc">
         <label for="cc-cvc">
           <abbr title="required">*</abbr>
           <span>CVC</span>
@@ -465,7 +465,7 @@
         <input id="cc-cvc" type="tel" class="paymentInput cc-cvc cc-cvc__demo" placeholder="CVC" autocompletetype="cc-cvc" required="required">
       </div>
 
-      <div class="cardInfo__submission">
+      <div class="cardInfo-submission">
         <input class="button" name="commit" type="submit" id="card-submit" value="Make Payment">
       </div>
     </fieldset>
@@ -475,31 +475,42 @@
 </figre>       
 */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
 
-
-
+        /**
+         * Initialises the PaymentModule
+         * @param {String} idOfContainer is the id of the element where the the the payment form will be injected into. 
+         * @param {String} sessionKey is the one time sesssion token retrieved from the backend. 
+         * @param {String} requestCallback is the callback that will be called when card details are submitted. 
+         *                                   @callback requestCallback~onSuccess
+         *                                           @param {string} code
+         *                                           @param {string} message
+         *                                           @param {string} token
+         *                                   @callback requestCallback~onFailure
+         *                                           @param {string} code
+         *                                           @param {string} message
+         */
         function initialise(idOfContainer, sessionKey, requestCallback) {
             this.containerId = idOfContainer;
             this.sessionKey = sessionKey;
             this.requestCallback = requestCallback;
 
-            document.getElementById("payment-container").innerHTML = paymentHTML;
+            var container = document.getElementById(idOfContainer);
+            if (container == null) {
+                console.error('payment form container id is invalid, call PaymentForm.Initialise(containerId, sessionKey, requestCallback)');
+                return;
+            }
+
+            container.innerHTML = paymentHTML;
             var creditCardInput = document.getElementById('cc-num');
             var creditCardExp = document.getElementById('cc-exp');
             var creditCardCVC = document.getElementById('cc-cvc');
-            // $('.cc-exp').payment('formatCardExpiry');
-            // $('.cc-cvc').payment('formatCardCVC');
-            var form = document.getElementById('payment-form');
+            var form = document.getElementById('cc-payment-form');
 
-            //Listen to events
-
-            form.addEventListener('submit', function (e) {
-                submit();
-                e.preventDefault();    //stop form from submitting
-            }, false);
+            /**
+             * Listen to events
+             */
 
             // CC NUMBER HANDLER
-            creditCardInput.oninput = function (event) //TODO Fallback to non html 5 listeners
-            {
+            var creditCardInputHandler = function () {
                 creditCardInput.value = Validator.formatCardNumber(creditCardInput.value);
 
                 //Reset validity
@@ -510,11 +521,12 @@
                     creditCardInput.setCustomValidity(ccNumberVal.error);
                 }
             };
+
+            addListenerMulti(creditCardInput, 'input change keypress paste', creditCardInputHandler);
             //END CC NUMBER HANDLER
 
             // EXPIRY DATE HANDLER
-            creditCardExp.oninput = function (event) //TODO Fallback to non html 5 listeners
-            {
+            var creditCardExpHandler = function () {
                 creditCardExp.value = Validator.formatExpiry(creditCardExp.value);
 
                 //Reset validity
@@ -525,11 +537,12 @@
                     creditCardExp.setCustomValidity(ccExpVal.error);
                 }
             };
+
+            addListenerMulti(creditCardExp, 'input change keypress paste', creditCardExpHandler);
             // END EXPIRY DATE HANDLER
 
             // CVC HANDLER
-            creditCardCVC.oninput = function (event) //TODO Fallback to non html 5 listeners
-            {
+            var creditCardCVCHandler = function () {
 
                 //Reset validity
                 creditCardCVC.setCustomValidity('');
@@ -539,36 +552,39 @@
                     creditCardCVC.setCustomValidity(ccCVCVal.error);
                 }
             };
+
+             addListenerMulti(creditCardCVC, 'input change keypress paste', creditCardCVCHandler);
             // END CVC HANDLER
 
+            // FORM SUBMIT HANDLER
+            form.addEventListener('submit', function (e) {
+                submit(e, this.callback);
+                e.preventDefault();    //stop form from submitting
+            }.bind(this), false);
+            //END FORM SUBMIT HANDLER
 
-            var submit = function (e) {
-                if (areFieldsValid()) { //Is valid check here
+            var submit = function (e, callback) {
+                if (e.currentTarget.checkValidity() == true) { //Is valid check here
                     //api call which also calls requestCallback
                 }
             };
 
-            var areFieldsValid = function () {
-                debugger;
-                console.log('test')
-                var isValid = true;
-
-
-                
-
-
-                return false;
-            };
+            /* Add one or more listeners to an element
+            ** @param {DOMElement} element - DOM element to add listeners to
+            ** @param {string} eventNames - space separated list of event names, e.g. 'click change'
+            ** @param {Function} listener - function to attach for each event as a listener
+            */
+            function addListenerMulti(element, eventNames, listener) {
+                var events = eventNames.split(' ');
+                for (var i = 0, iLen = events.length; i < iLen; i++) {
+                    element.addEventListener(events[i], listener.bind(this), false);
+                }
+            }
         }
 
+        // Form controls, reset, clear etc
 
-
-
-
-
-        //Handle responses
-
-        //Error checking
+        // Callback handler
 
         return {
             initialise: initialise
