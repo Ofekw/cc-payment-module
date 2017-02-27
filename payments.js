@@ -12,23 +12,22 @@
      *                                                       expiry_month: "String - MM",
      *                                                       expiry_year: "String - YYYY" }
      *
-     * @param {Function} listener. Peram1. Model Schema: {
+     * @param {Function} callback.  Model Schema: {
      *                                                       "token": "string",
      *                                                       "code": "string",
      *                                                       "version": 0,
      *                                                       "message": "string" }
      */
     AjaxHelper.prototype = {
-        getToken: function (data, listener) {
+        getToken: function (data, callback) {
             var self = this;
-            self._listener = listener;
             var url = ''; //TODO GET API base
             data = JSON.stringify(data);
             if (window.XMLHttpRequest) {
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (xhttp.readyState === 4 && xhttp.status === 200) {
-                        self._listener(self.parseResponse(xhttp.responseText));
+                        callback(self.parseResponse(xhttp.responseText));
                     }
                 }.bind(self);
                 xhttp.ontimeout = function (e) {
@@ -36,7 +35,7 @@
                     var response = new self.formattedResponse();
                     response.code = 0;
                     response.message = 'Timeout';
-                    self._listener(response);
+                    callback(response);
                 }.bind(self);
                 xhttp.open('POST', url, true);
                 // header required for ios safari support: http://stackoverflow.com/a/30296149
@@ -52,7 +51,7 @@
                     var xdr = new XDomainRequest();
                     xdr.open('get', url);
                     xdr.onload = function () {
-                        self._listener(self.parseResponse(xdr.responseText));
+                        callback(self.parseResponse(xdr.responseText));
                     };
                     setTimeout(function () {
                         xdr.send(data);
@@ -61,13 +60,13 @@
                     var response = new self.formattedResponse();
                     response.code = 5;
                     response.message = 'HTTPS connection required in Internet Explorer 9 and below';
-                    self._listener(response);
+                    callback(response);
                 }
             } else {
                 var response = new self.formattedResponse();
                 response.code = 6;
                 response.message = 'Unsupported browser';
-                self._listener(response);
+                callback(response);
             }
         },
         formattedResponse: function () {
@@ -439,7 +438,8 @@
         var containerId,
             apiCredentials,
             requestCallback;
-
+        
+        // HTML to be injected
         var paymentHTML = (function () {/*
 <figure class="ext_payment_library">
   <div class="paymentInfo">
@@ -485,7 +485,7 @@
 
         /**
          * Initialises the PaymentModule
-         * @param {String} idOfContainer is the id of the element where the the the payment form will be injected into. 
+         * @param {Element} container is the id of the element where the the the payment form will be injected into. 
          * @param {String} sessionKey is the one time sesssion token retrieved from the backend. 
          * @param {String} requestCallback is the callback that will be called when card details are submitted. 
          *                                   @callback requestCallback~onSuccess
@@ -496,16 +496,19 @@
          *                                           @param {string} code
          *                                           @param {string} message
          */
-        function initialise(idOfContainer, sessionKey, requestCallback) {
-            this.containerId = idOfContainer;
+        function initialise(container, sessionKey, requestCallback) {
+            this.container = container;
             this.sessionKey = sessionKey;
             this.requestCallback = requestCallback;
 
-            var container = document.getElementById(idOfContainer);
-            if (container == null) {
-                console.error('payment form container id is invalid, call PaymentForm.Initialise(containerId, sessionKey, requestCallback)');
+            if (this.container == null) {
+                console.error('payment form container id is invalid, call PaymentForm.Initialise(container, sessionKey, requestCallback)');
                 return;
             }
+
+            /**
+             * Initialise DOM
+             */
 
             container.innerHTML = paymentHTML;
             var creditCardInput = document.getElementById('cc-num');
@@ -514,7 +517,7 @@
             var form = document.getElementById('cc-payment-form');
 
             /**
-             * Listen to events
+             * Event Handlers
              */
 
             // CC NUMBER HANDLER
