@@ -404,6 +404,14 @@
                 };
             }
 
+            if (str.length > max && onBlur === true) {
+                return {
+                    isValid: false,
+                    error: 'Please enter a valid CVV number. The number entered is too long.',
+                    fieldType: 'cvv'
+                };
+            }
+
             return { isValid: true, error: '', fieldType: 'cvv' };
         }
 
@@ -462,7 +470,7 @@
           <abbr title="required">*</abbr>
           <span>CVC</span>
         </label>
-        <input id="cc-cvc" type="tel" class="paymentInput cc-cvc cc-cvc__demo" placeholder="CVC" autocompletetype="cc-cvc" required="required">
+        <input id="cc-cvc" type="tel" class="paymentInput cc-cvc cc-cvc__demo" placeholder="CVC" autocompletetype="cc-cvc" required="required" maxlength="4">
       </div>
 
       <div class="cardInfo-submission">
