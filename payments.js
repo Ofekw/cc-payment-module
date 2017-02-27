@@ -487,7 +487,8 @@
          * Initialises the PaymentModule
          * @param {Element} container is the id of the element where the the the payment form will be injected into. 
          * @param {String} sessionKey is the one time sesssion token retrieved from the backend. 
-         * @param {String} requestCallback is the callback that will be called when card details are submitted. 
+         * @param {Styles} styles is the object containing styling properties for the payment elements //TODO add details of object schema
+         * @param {String} requestCallback is the callback that will be called when card details are submitted.
          *                                   @callback requestCallback~onSuccess
          *                                           @param {string} code
          *                                           @param {string} message
@@ -515,6 +516,8 @@
             var creditCardExp = document.getElementById('cc-exp');
             var creditCardCVC = document.getElementById('cc-cvc');
             var form = document.getElementById('cc-payment-form');
+
+            // TODO: Dynamic styling
 
             /**
              * Event Handlers
@@ -593,9 +596,9 @@
             }
         }
 
-        // Form controls, reset, clear etc
+        // TODO: Form controls, reset, clear etc
 
-        // Callback handler
+        // TODO: Callback handler
 
         return {
             initialise: initialise
