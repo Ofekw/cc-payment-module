@@ -446,10 +446,7 @@
           <abbr title="required">*</abbr>
           <span>Card Number</span>
         </label>
-        <div class="cc-num__wrap">
-          <input id="cc-num" type="tel" class="paymentInput cc-num" placeholder="•••• •••• •••• ••••" autocompletetype="cc-number" required="required">
-          <span class="card" aria-hidden="true"></span>
-        </div>
+        <input id="cc-num" type="tel" class="paymentInput cc-num" placeholder="•••• •••• •••• ••••" autocompletetype="cc-number" required="required">
       </div>
 
       <div class="form-row cardInfo__cc-exp">
@@ -457,7 +454,7 @@
           <abbr title="required">*</abbr>
           <span>Expires</span>
         </label>
-        <input id="cc-exp" type="tel" class="paymentInput cc-exp cc-exp__demo" placeholder="MM / YY" autocompletetype="cc-exp" required="required">
+        <input id="cc-exp" type="tel" class="paymentInput cc-exp cc-exp__demo" placeholder="MM / YYYY" autocompletetype="cc-exp" required="required">
       </div>
 
       <div class="form-row cardInfo__cc-cvc">
@@ -478,7 +475,7 @@
 </figre>       
 */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
 
-    
+
 
         function initialise(idOfContainer, sessionKey, requestCallback) {
             this.containerId = idOfContainer;
@@ -487,31 +484,81 @@
 
             document.getElementById("payment-container").innerHTML = paymentHTML;
             var creditCardInput = document.getElementById('cc-num');
+            var creditCardExp = document.getElementById('cc-exp');
+            var creditCardCVC = document.getElementById('cc-cvc');
             // $('.cc-exp').payment('formatCardExpiry');
             // $('.cc-cvc').payment('formatCardCVC');
-            var form =  document.getElementById('payment-form');    
+            var form = document.getElementById('payment-form');
 
             //Listen to events
 
-            form.addEventListener('submit', function(e){
-                 e.preventDefault();    //stop form from submitting
+            form.addEventListener('submit', function (e) {
                 submit();
+                e.preventDefault();    //stop form from submitting
             }, false);
 
-            creditCardInput.oninput =  function(event) //TODO Fallback to non html 5 listeners
+            // CC NUMBER HANDLER
+            creditCardInput.oninput = function (event) //TODO Fallback to non html 5 listeners
             {
                 creditCardInput.value = Validator.formatCardNumber(creditCardInput.value);
+
+                //Reset validity
+                creditCardInput.setCustomValidity('');
+
+                var ccNumberVal = Validator.isValidCardNumber(creditCardInput.value, true);
+                if (!ccNumberVal.isValid) {
+                    creditCardInput.setCustomValidity(ccNumberVal.error);
+                }
             };
+            //END CC NUMBER HANDLER
+
+            // EXPIRY DATE HANDLER
+            creditCardExp.oninput = function (event) //TODO Fallback to non html 5 listeners
+            {
+                creditCardExp.value = Validator.formatExpiry(creditCardExp.value);
+
+                //Reset validity
+                creditCardExp.setCustomValidity('');
+
+                var ccExpVal = Validator.isValidExpiryDate(creditCardExp.value, new Date(), true);
+                if (!ccExpVal.isValid) {
+                    creditCardExp.setCustomValidity(ccExpVal.error);
+                }
+            };
+            // END EXPIRY DATE HANDLER
+
+            // CVC HANDLER
+            creditCardCVC.oninput = function (event) //TODO Fallback to non html 5 listeners
+            {
+
+                //Reset validity
+                creditCardCVC.setCustomValidity('');
+
+                var ccCVCVal = Validator.isValidCvc(Validator.getCardType(creditCardInput.value), creditCardCVC.value, true);
+                if (!ccCVCVal.isValid) {
+                    creditCardCVC.setCustomValidity(ccCVCVal.error);
+                }
+            };
+            // END CVC HANDLER
 
 
             var submit = function (e) {
-                if (true) { //Is valid check here
-                    alert('test');
+                if (areFieldsValid()) { //Is valid check here
                     //api call which also calls requestCallback
                 }
-
             };
 
+            var areFieldsValid = function () {
+                debugger;
+                console.log('test')
+                var isValid = true;
+
+
+                
+
+
+                return false;
+            };
         }
 
 
@@ -519,14 +566,14 @@
 
 
 
-            //Handle responses
+        //Handle responses
 
-            //Error checking
+        //Error checking
 
-            return {
-                initialise: initialise
-            };
-        })();
+        return {
+            initialise: initialise
+        };
+    })();
 
-        window.PaymentModule = PaymentModule;
-    })(window);
+    window.PaymentModule = PaymentModule;
+})(window);
